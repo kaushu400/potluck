@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1B4332">
+  <title>Christmas Holiday Potluck 🎄</title>
+
+  <!-- Link-preview tags (WhatsApp/iMessage read these from the raw HTML, not from JS).
+       If you change EVENT_CONFIG below, update these two lines to match. -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Christmas Holiday Potluck 🎄">
+  <meta property="og:description" content="Saturday, December 19, 2026 · 6:00 PM onwards — tap to RSVP and sign up for a dish!">
+  <meta name="description" content="Christmas Holiday Potluck sign-up — RSVP and pick a dish to bring.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎄%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FAF8F5',
+            evergreen: { DEFAULT: '#1B4332', light: '#2D6A4F' },
+            berry: { DEFAULT: '#9B2226', light: '#FBEAEA' },
+            gold: { DEFAULT: '#D4A373', dark: '#8A5A2B' }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    :root { --sticky-h: 128px; }
+    body { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+    button, input { touch-action: manipulation; }
+    /* 16px minimum stops iOS Safari from zooming the page when an input is focused */
+    input, textarea, select { font-size: 16px; }
+    :focus-visible { outline: 3px solid #1B4332; outline-offset: 2px; }
+    .on-dark:focus-visible { outline-color: #fff; }
+    .cat-section { scroll-margin-top: calc(var(--sticky-h) + 8px); }
+    .stripe { background: repeating-linear-gradient(-45deg, #9B2226 0 10px, #FAF8F5 10px 20px, #1B4332 20px 30px, #FAF8F5 30px 40px); }
+    .sheet { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
+    .sheet-body { overscroll-behavior: contain; }
+    @keyframes sheetIn { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .sheet-anim { animation: sheetIn .2s ease-out; }
+    .fade-anim { animation: fadeIn .15s ease-out; }
+    @keyframes pulse2 { 0%,100% { opacity: 1; } 50% { opacity: .45; } }
+    .skeleton { animation: pulse2 1.4s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .sheet-anim, .fade-anim, .skeleton { animation: none; }
+    }
+  </style>
+</head>
+
+<body class="bg-cream font-sans text-stone-800 antialiased">
+
+  <!-- Banners -->
+  <div id="demoBanner" class="hidden border-b border-amber-300 bg-amber-100 text-amber-900" role="status">
+    <div class="mx-auto flex max-w-xl items-center gap-2 px-4 py-1">
+      <p class="flex-1 py-2 text-[13px] leading-snug">Demo Mode (Local Storage) — Add Firebase config to enable live multi-guest sync.</p>
+      <button id="demoBannerClose" type="button" aria-label="Dismiss demo mode notice"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl leading-none hover:bg-amber-200">×</button>
+    </div>
+  </div>
+  <div id="errorBanner" class="hidden border-b border-berry/30 bg-berry-light text-berry" role="alert">
+    <div class="mx-auto flex max-w-xl items-center gap-2 px-4 py-1">
+      <p id="errorBannerText" class="flex-1 py-2 text-[13px] leading-snug"></p>
+      <button id="errorBannerClose" type="button" aria-label="Dismiss message"
+        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xl leading-none hover:bg-berry/10">×</button>
+    </div>
+  </div>
+
+  <main class="mx-auto max-w-xl px-4 pb-24 pt-4">
+
+    <!-- Event header (filled from EVENT_CONFIG) -->
+    <header id="eventHeader" class="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm"></header>
+
+    <!-- Sticky live summary -->
+    <section id="summaryBar" aria-label="RSVP summary"
+      class="sticky top-0 z-30 -mx-4 mt-3 border-b border-stone-200/80 bg-cream/95 px-4 py-2 backdrop-blur">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span class="rounded-full bg-evergreen px-3 py-1.5 text-sm font-bold text-white">Total: <span id="totalGuests">0</span></span>
+        <span class="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[13px] text-stone-700">Adults: <b id="adultsCount">0</b></span>
+        <span class="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[13px] text-stone-700">Kids: <b id="kidsCount">0</b></span>
+        <span id="modeBadge" class="ml-auto text-xs font-semibold text-stone-500"></span>
+      </div>
+      <div id="pillRow" class="mt-2 grid grid-cols-3 gap-2"></div>
+    </section>
+
+    <!-- Primary action -->
+    <div class="mt-4">
+      <button id="openAdd" type="button"
+        class="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl bg-evergreen px-4 text-base font-bold text-white shadow-md transition active:scale-[0.99] hover:bg-evergreen-light">
+        <span aria-hidden="true" class="text-xl leading-none">+</span> RSVP &amp; Add Dish
+      </button>
+    </div>
+
+    <!-- Host tools: only shown when the page is opened with ?host=1 -->
+    <section id="hostPanel" class="mt-4 hidden overflow-hidden rounded-2xl border border-gold bg-white shadow-sm" aria-label="Host tools">
+      <div class="flex flex-wrap items-center gap-2 p-3">
+        <p class="mr-auto text-sm font-extrabold text-evergreen"><span aria-hidden="true">🔑</span> Host view</p>
+        <button id="toggleGuests" type="button" aria-expanded="false" aria-controls="guestList"
+          class="min-h-[44px] rounded-xl border border-evergreen/30 bg-white px-3 text-sm font-bold text-evergreen hover:bg-stone-50">View all guests</button>
+        <button id="downloadCsv" type="button"
+          class="min-h-[44px] rounded-xl bg-evergreen px-3 text-sm font-bold text-white hover:bg-evergreen-light">Download CSV</button>
+      </div>
+      <div id="guestList" class="hidden border-t border-stone-100"></div>
+    </section>
+
+    <!-- Category sections -->
+    <div id="sections" class="mt-6 space-y-5"></div>
+
+    <p class="mt-8 text-center text-xs text-stone-500">Need to change something? Tap the pencil on your entry.</p>
+  </main>
+
+  <!-- RSVP / Edit modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div id="modalBackdrop" class="fade-anim absolute inset-0 bg-black/50"></div>
+    <div class="pointer-events-none absolute inset-0 flex items-end justify-center sm:items-center sm:p-4">
+      <form id="rsvpForm" novalidate
+        class="sheet sheet-anim pointer-events-auto relative flex w-full flex-col rounded-t-3xl bg-white shadow-2xl sm:max-w-lg sm:rounded-3xl">
+        <div class="flex items-center justify-between gap-2 border-b border-stone-100 px-5 py-3">
+          <h2 id="modalTitle" class="text-lg font-extrabold text-evergreen">RSVP &amp; Add Dish</h2>
+          <button type="button" data-close-modal aria-label="Close"
+            class="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-2xl leading-none text-stone-500 hover:bg-stone-100">×</button>
+        </div>
+
+        <div class="sheet-body flex-1 space-y-5 overflow-y-auto px-5 py-4">
+          <!-- 1. Name (suggests guests who already RSVP'd) -->
+          <div>
+            <label for="fName" class="mb-1.5 block text-sm font-semibold text-stone-800">Family / Guest Name <span class="text-berry" aria-hidden="true">*</span></label>
+            <div id="nameWrap" class="relative">
+              <input id="fName" type="text" maxlength="60" autocomplete="off" autocapitalize="words" spellcheck="false"
+                role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="nameList"
+                placeholder="e.g., The Patel Family" aria-describedby="err-name"
+                class="min-h-[48px] w-full rounded-xl border border-stone-300 bg-white px-3 text-base placeholder:text-stone-400 focus:border-evergreen focus:outline-none focus:ring-2 focus:ring-evergreen/30">
+              <ul id="nameList" role="listbox" aria-label="Guests who already RSVP'd"
+                class="absolute inset-x-0 top-full z-20 mt-1 hidden max-h-72 overflow-auto rounded-xl border border-stone-200 bg-white shadow-lg"></ul>
+            </div>
+            <p id="nameStatus" class="sr-only" role="status" aria-live="polite"></p>
+            <p id="err-name" class="mt-1 hidden text-sm font-medium text-berry"></p>
+            <div id="nameHint" class="mt-1 hidden"></div>
+            <div id="linkedBox" class="mt-2 hidden rounded-xl border border-evergreen/30 bg-evergreen/5 p-3"></div>
+          </div>
+
+          <!-- 2. Headcount -->
+          <fieldset id="headcountSet">
+            <legend class="mb-1.5 block text-sm font-semibold text-stone-800">Who's coming?</legend>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="rounded-xl border border-stone-200 bg-stone-50 p-2.5">
+                <p class="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-stone-500" id="lbl-adults">Adults</p>
+                <div class="flex items-center justify-between">
+                  <button type="button" data-step="adults" data-dir="-1" aria-label="Fewer adults"
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl font-bold text-evergreen disabled:opacity-35">−</button>
+                  <output id="adultsVal" aria-labelledby="lbl-adults" class="min-w-[2ch] text-center text-xl font-extrabold">2</output>
+                  <button type="button" data-step="adults" data-dir="1" aria-label="More adults"
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl font-bold text-evergreen disabled:opacity-35">+</button>
+                </div>
+              </div>
+              <div class="rounded-xl border border-stone-200 bg-stone-50 p-2.5">
+                <p class="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-stone-500" id="lbl-kids">Kids</p>
+                <div class="flex items-center justify-between">
+                  <button type="button" data-step="kids" data-dir="-1" aria-label="Fewer kids"
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl font-bold text-evergreen disabled:opacity-35">−</button>
+                  <output id="kidsVal" aria-labelledby="lbl-kids" class="min-w-[2ch] text-center text-xl font-extrabold">0</output>
+                  <button type="button" data-step="kids" data-dir="1" aria-label="More kids"
+                    class="flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 bg-white text-xl font-bold text-evergreen disabled:opacity-35">+</button>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          <!-- 3-6. Dishes: one card per dish, so a family can bring several -->
+          <div>
+            <div id="dishForms" class="space-y-4"></div>
+            <button id="addDishBtn" type="button"
+              class="mt-3 min-h-[48px] w-full rounded-xl border-2 border-dashed border-evergreen/40 bg-cream px-3 text-sm font-bold text-evergreen hover:bg-stone-100 disabled:opacity-50">+ Add another dish</button>
+            <p id="dishHint" class="mt-1.5 text-center text-xs text-stone-500"></p>
+          </div>
+        </div>
+
+        <div class="flex gap-3 border-t border-stone-100 px-5 py-3" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
+          <button type="button" data-close-modal
+            class="min-h-[48px] flex-1 rounded-xl border border-stone-300 bg-white px-4 text-base font-semibold text-stone-700 hover:bg-stone-50">Cancel</button>
+          <button id="saveBtn" type="submit"
+            class="min-h-[48px] flex-[2] rounded-xl bg-evergreen px-4 text-base font-bold text-white hover:bg-evergreen-light disabled:opacity-60">Save RSVP</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete confirmation -->
+  <div id="confirm" class="fixed inset-0 z-[60] hidden" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div id="confirmBackdrop" class="fade-anim absolute inset-0 bg-black/50"></div>
+    <div class="pointer-events-none absolute inset-0 flex items-center justify-center p-4">
+      <div class="sheet-anim pointer-events-auto w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
+        <h2 id="confirmTitle" class="text-lg font-extrabold text-stone-900"></h2>
+        <p id="confirmNote" class="mt-1 text-sm text-stone-600">This can’t be undone.</p>
+        <div class="mt-4 flex gap-3">
+          <button id="confirmCancel" type="button" class="min-h-[48px] flex-1 rounded-xl border border-stone-300 bg-white px-4 font-semibold text-stone-700 hover:bg-stone-50">Cancel</button>
+          <button id="confirmOk" type="button" class="min-h-[48px] flex-1 rounded-xl bg-berry px-4 font-bold text-white hover:brightness-110 disabled:opacity-60">Remove</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" role="status" aria-live="polite"
+    class="pointer-events-none fixed inset-x-0 z-[70] flex justify-center px-4 opacity-0 transition-all duration-200 translate-y-2"
+    style="bottom: max(1rem, env(safe-area-inset-bottom));">
+    <div id="toastInner" class="max-w-sm rounded-full bg-evergreen px-5 py-3 text-center text-sm font-semibold text-white shadow-lg"></div>
+  </div>
+
+<script>
+/* =====================================================================
+ *  EVENT_CONFIG  —  edit everything you need to customise right here.
+ * ===================================================================== */
+const EVENT_CONFIG = {
+  title:    'Christmas Holiday Potluck 🎄',
+  subtitle: 'Eat, drink, and be merry!',
+  date:     'Saturday, December 19, 2026',
+  time:     '6:00 PM onwards',
+  // Optional: text in (parentheses) shows as a small note under the address and is left out of "Copy Address".
+  location: '11 Breton Dr., Pine Brook, NJ 07058',
+  hostNote: 'Drinks, tableware, and any missing food categories will be covered by the host!',
+
+  // How many dishes you'd like per category. Drives the "X of Y spots filled" indicators.
+  targetCounts: { appetizer: 4, main: 5, dessert: 3 },
+
+  // Paste your Firebase web-app config here to turn on live multi-guest sync.
+  // Leave databaseURL empty ("") to run in Local Demo Mode (data stays in this browser only).
+  firebaseConfig: {
+    apiKey: '',
+    authDomain: '',
+    databaseURL: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: ''
+  }
+};
+
+/* =====================================================================
+ *  App code (no need to edit below this line)
+ * ===================================================================== */
+(() => {
+'use strict';
+
+const FIREBASE_SDK_BASE = 'https://www.gstatic.com/firebasejs/10.12.0/';
+const DB_PATH = 'potluck_rsvps';
+const LOCAL_KEY = 'potluck_rsvps_demo_v1';
+const BANNER_KEY = 'potluck_demo_banner_dismissed';
+const MAX_PER_COUNT = 20;
+const MAX_DISHES = 6;
+const HOST_MODE = new URLSearchParams(location.search).get('host') === '1';
+
+const CATEGORIES = [
+  { key: 'appetizer', icon: '🥗', title: 'Appetizers',   pill: 'Appetizers', short: 'Appetizer', seg: 'Appetizer',    add: 'Add to Appetizers' },
+  { key: 'main',      icon: '🍲', title: 'Main Course',  pill: 'Mains',      short: 'Main',      seg: 'Main Course',  add: 'Add to Main Course' },
+  { key: 'dessert',   icon: '🍰', title: 'Desserts',     pill: 'Desserts',   short: 'Dessert',   seg: 'Dessert',      add: 'Add to Desserts' },
+  { key: 'other',     icon: '🎁', title: 'Bringing Holiday Cheer / Drinks / Undecided', pill: null, short: 'Drinks & extras',
+    seg: 'Holiday Cheer / Drinks / Undecided', add: 'RSVP / Add Drinks' }
+];
+const CAT_KEYS = CATEGORIES.map(c => c.key);
+const catByKey = key => CATEGORIES.find(c => c.key === key);
+
+const DIETARY_TAGS = [
+  { key: 'Vegetarian',   cls: 'bg-emerald-100 text-emerald-900 border-emerald-200' },
+  { key: 'Vegan',        cls: 'bg-lime-100 text-lime-900 border-lime-300' },
+  { key: 'Non-Veg',      cls: 'bg-berry text-white border-berry' },
+  { key: 'Gluten-Free',  cls: 'bg-amber-100 text-amber-900 border-amber-200' },
+  { key: 'Nut-Free',     cls: 'bg-rose-100 text-rose-900 border-rose-200' },
+  { key: 'Kid-Friendly', cls: 'bg-sky-100 text-sky-900 border-sky-200' }
+];
+const TAG_KEYS = DIETARY_TAGS.map(t => t.key);
+
+/* ---------- tiny helpers ---------- */
+const $ = (sel, root = document) => root.querySelector(sel);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+const reducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const safeSession = {
+  get(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, v); } catch (_) { /* ignore */ } }
+};
+
+/* ---------- data normalisation (the DB is public, so never trust what comes back) ---------- */
+const cleanStr = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const cleanInt = (v, min, max, fallback) => {
+  const n = Math.floor(Number(v));
+  return Number.isFinite(n) ? clamp(n, min, max) : fallback;
+};
+function normalizeDish(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const rawTags = Array.isArray(raw.tags) ? raw.tags : (raw.tags && typeof raw.tags === 'object' ? Object.values(raw.tags) : []);
+  return {
+    category: CAT_KEYS.includes(raw.category) ? raw.category : 'other',
+    dish: cleanStr(raw.dish, 80),
+    tags: TAG_KEYS.filter(t => rawTags.includes(t)),
+    note: cleanStr(raw.note, 140)
+  };
+}
+// One entry = one RSVP (headcount counted once) holding one or more dishes.
+// Older single-dish entries (category/dish/tags/note at the top level) are upgraded on the fly.
+function normalizeEntry(id, raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const name = cleanStr(raw.name, 60);
+  if (!name) return null;
+  let list = raw.dishes;
+  if (list && typeof list === 'object' && !Array.isArray(list)) {
+    list = Object.keys(list).sort((a, b) => Number(a) - Number(b)).map(k => list[k]); // Firebase may hand arrays back as {0:…,1:…}
+  }
+  let dishes = Array.isArray(list) ? list.map(normalizeDish).filter(Boolean).slice(0, MAX_DISHES) : [];
+  if (!dishes.length) dishes = [normalizeDish(raw) || { category: 'other', dish: '', tags: [], note: '' }];
+  return {
+    id: String(id),
+    name,
+    adults: cleanInt(raw.adults, 1, MAX_PER_COUNT, 1),
+    kids: cleanInt(raw.kids, 0, MAX_PER_COUNT, 0),
+    dishes,
+    createdAt: Number(raw.createdAt) || 0,
+    updatedAt: Number(raw.updatedAt) || 0
+  };
+}
+const sortEntries = list => list.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+
+/* =====================================================================
+ *  Data layer: Firebase Realtime Database, with localStorage fallback
+ * ===================================================================== */
+function hasValidFirebaseConfig(cfg) {
+  const url = cfg && typeof cfg.databaseURL === 'string' ? cfg.databaseURL.trim() : '';
+  if (!url) return false;
+  if (!/^https:\/\/[^\s]+\.[^\s]+/i.test(url)) return false;
+  if (/your[-_ ]|placeholder|example|changeme|xxx|[<>]/i.test(url)) return false;
+  return true;
+}
+
+async function createFirebaseStore(cfg) {
+  const [appMod, dbMod] = await Promise.all([
+    import(FIREBASE_SDK_BASE + 'firebase-app.js'),
+    import(FIREBASE_SDK_BASE + 'firebase-database.js')
+  ]);
+  const { initializeApp } = appMod;
+  const { getDatabase, ref, onValue, set: fbSet, push, remove: fbRemove } = dbMod;
+  const app = initializeApp(cfg);
+  const db = getDatabase(app);
+  const listRef = ref(db, DB_PATH);
+
+  return {
+    mode: 'firebase',
+    subscribe(onData, onError) {
+      return onValue(listRef, snap => {
+        const val = snap.val();
+        const list = val && typeof val === 'object'
+          ? Object.entries(val).map(([id, raw]) => normalizeEntry(id, raw)).filter(Boolean)
+          : [];
+        onData(sortEntries(list));
+      }, err => onError && onError(err));
+    },
+    async save(entry) {
+      const id = entry.id || push(listRef).key;
+      const data = JSON.parse(JSON.stringify(entry)); // JSON round-trip drops undefined values (Firebase rejects them)
+      delete data.id;
+      data.dishes.forEach(d => { if (!d.tags || !d.tags.length) delete d.tags; }); // Firebase drops empty arrays anyway
+      await fbSet(ref(db, `${DB_PATH}/${id}`), data);
+      return id;
+    },
+    async remove(id) {
+      await fbRemove(ref(db, `${DB_PATH}/${id}`));
+    }
+  };
+}
+
+function createLocalStore() {
+  const listeners = new Set();
+  let memory = null; // used only if localStorage is unavailable (private mode / locked-down webviews)
+
+  const seed = () => {
+    const now = Date.now();
+    return [
+      { id: 'demo_1', name: 'The Patel Family', adults: 2, kids: 1,
+        dishes: [{ category: 'main', dish: 'Butter Chicken & Jeera Rice', tags: ['Kid-Friendly'], note: 'Will bring warming tray' }],
+        createdAt: now - 7200000, updatedAt: now - 7200000 },
+      { id: 'demo_2', name: 'Sarah & Tom Johnson', adults: 2, kids: 0,
+        dishes: [{ category: 'appetizer', dish: 'Spinach & Artichoke Dip with Pita', tags: ['Vegetarian'], note: 'Bringing a small slow cooker to keep it warm' }],
+        createdAt: now - 3600000, updatedAt: now - 3600000 }
+    ];
+  };
+  const read = () => {
+    try {
+      const raw = localStorage.getItem(LOCAL_KEY);
+      if (raw === null) { const s = seed(); localStorage.setItem(LOCAL_KEY, JSON.stringify(s)); return s; }
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      if (memory === null) memory = seed();
+      return memory;
+    }
+  };
+  const write = list => {
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(list)); }
+    catch (_) { memory = list; }
+  };
+  const snapshot = () => sortEntries(read().map(r => normalizeEntry(r && r.id, r)).filter(Boolean));
+  const emit = () => { const s = snapshot(); listeners.forEach(cb => cb(s)); };
+
+  // Keep several open tabs of the same browser in sync
+  window.addEventListener('storage', e => { if (e.key === LOCAL_KEY) emit(); });
+
+  return {
+    mode: 'local',
+    subscribe(onData) {
+      listeners.add(onData);
+      onData(snapshot());
+      return () => listeners.delete(onData);
+    },
+    async save(entry) {
+      const list = read();
+      const id = entry.id || 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      const rec = Object.assign({}, entry, { id });
+      const idx = list.findIndex(x => x.id === id);
+      if (idx >= 0) list[idx] = rec; else list.push(rec);
+      write(list);
+      emit();
+      return id;
+    },
+    async remove(id) {
+      write(read().filter(x => x.id !== id));
+      emit();
+    }
+  };
+}
+
+/* =====================================================================
+ *  State
+ * ===================================================================== */
+let store = null;
+let entries = [];
+let loaded = false;
+let lastSignature = '';
+let loadTimer = null;
+
+// Every dish from every RSVP, flattened: { e: the RSVP, d: the dish, j: its index within the RSVP }
+const dishItems = () => entries.flatMap(e => e.dishes.map((d, j) => ({ e, d, j })));
+const countIn = key => dishItems().filter(x => x.d.category === key).length; // counts dishes, not people
+const targetFor = key => {
+  const t = EVENT_CONFIG.targetCounts && EVENT_CONFIG.targetCounts[key];
+  return Number.isFinite(t) && t > 0 ? t : 0;
+};
+
+/* =====================================================================
+ *  Rendering
+ * ===================================================================== */
+function renderHeader() {
+  const c = EVENT_CONFIG;
+  // "(text in parentheses)" in the location is shown as a small note under the address
+  const locNote = (c.location.match(/\(([^)]*)\)/) || [])[1] || '';
+  const locMain = c.location.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  document.title = c.title;
+  $('#eventHeader').innerHTML = `
+    <div class="stripe h-1.5" aria-hidden="true"></div>
+    <div class="p-4">
+      <h1 class="text-balance text-2xl font-extrabold leading-tight text-evergreen" style="text-wrap: balance;">${esc(c.title)}</h1>
+      <p class="mt-0.5 text-sm font-semibold text-berry">${esc(c.subtitle)}</p>
+      <ul class="mt-3 text-[15px] text-stone-700">
+        <li class="flex flex-wrap gap-x-4 gap-y-0.5 py-0.5">
+          <span><span aria-hidden="true">📅</span> <span class="font-semibold">${esc(c.date)}</span></span>
+          <span><span aria-hidden="true">🕕</span> ${esc(c.time)}</span>
+        </li>
+        <li class="flex items-center justify-between gap-2 py-0.5">
+          <span class="min-w-0"><span aria-hidden="true">📍</span> ${esc(locMain)}${locNote ? `<span class="block pl-6 text-sm text-stone-500">${esc(locNote)}</span>` : ''}</span>
+          <button id="copyAddr" type="button"
+            class="min-h-[44px] shrink-0 rounded-xl border border-evergreen/30 bg-white px-3 text-sm font-semibold text-evergreen hover:bg-stone-50">
+            Copy Address
+          </button>
+        </li>
+      </ul>
+      <p class="mt-2 rounded-xl bg-gold/20 px-3 py-2 text-sm leading-snug text-evergreen"><span aria-hidden="true">🎁</span> ${esc(c.hostNote)}</p>
+    </div>`;
+}
+
+function renderSummary() {
+  const adults = entries.reduce((s, e) => s + e.adults, 0);
+  const kids = entries.reduce((s, e) => s + e.kids, 0);
+  $('#totalGuests').textContent = adults + kids;
+  $('#adultsCount').textContent = adults;
+  $('#kidsCount').textContent = kids;
+
+  $('#pillRow').innerHTML = CATEGORIES.filter(c => c.pill).map(c => {
+    const n = countIn(c.key);
+    const t = targetFor(c.key);
+    const done = t > 0 && n >= t;
+    const cls = done
+      ? 'border-gold bg-gold/30 text-evergreen'
+      : 'border-stone-200 bg-white text-stone-800';
+    return `<button type="button" data-scroll="${c.key}" aria-label="${esc(c.title)}: ${n} of ${t} filled. Jump to section"
+      class="min-h-[44px] rounded-xl border ${cls} px-1.5 py-1 text-center text-[13px] font-semibold leading-tight hover:bg-stone-50">
+      ${esc(c.pill)}: <span class="font-extrabold">${n}/${t}</span>${done ? ' <span aria-hidden="true">✓</span>' : ''}
+    </button>`;
+  }).join('');
+
+  const badge = $('#modeBadge');
+  if (store) {
+    badge.innerHTML = store.mode === 'firebase'
+      ? '<span class="text-emerald-700"><span aria-hidden="true">●</span> Live</span>'
+      : '<span class="text-amber-700"><span aria-hidden="true">●</span> Demo</span>';
+  }
+}
+
+const headcountText = e => plural(e.adults, 'Adult', 'Adults') + (e.kids > 0 ? ', ' + plural(e.kids, 'Kid', 'Kids') : '');
+const tagBadges = tags => tags.map(t => {
+  const def = DIETARY_TAGS.find(d => d.key === t);
+  return `<span class="rounded-full border px-2 py-0.5 text-xs font-semibold ${def.cls}">${esc(t)}</span>`;
+}).join('');
+
+const iconEdit = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>';
+const iconTrash = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+
+function renderDish({ e, d, j }) {
+  const multi = e.dishes.length > 1;
+  const headcount = headcountText(e);
+  const dishHtml = d.dish
+    ? `<p class="break-words font-bold leading-snug text-stone-900">${esc(d.dish)}</p>`
+    : `<p class="font-semibold italic leading-snug text-stone-500">Dish to be decided</p>`;
+  const also = multi
+    ? `<p class="mt-1.5 break-words text-xs text-stone-500">Also bringing: ${e.dishes.filter((_, k) => k !== j)
+        .map(o => `${esc(o.dish || 'a dish to be decided')} <span class="text-stone-400">(${esc(catByKey(o.category).short)})</span>`).join(', ')}</p>`
+    : '';
+  const delLabel = multi ? `Delete ${esc(d.dish || 'this dish')} from ${esc(e.name)}'s RSVP` : `Delete ${esc(e.name)}'s entry`;
+  return `
+    <li class="px-4 py-3.5" data-entry="${esc(e.id)}" data-dish-index="${j}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          ${dishHtml}
+          <p class="mt-0.5 break-words text-sm text-stone-600">${esc(e.name)}</p>
+        </div>
+        <div class="-mr-2 -mt-1.5 flex shrink-0">
+          <button type="button" data-edit="${esc(e.id)}" data-j="${j}" aria-label="Edit ${esc(e.name)}'s entry"
+            class="flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-stone-100 hover:text-evergreen">${iconEdit}</button>
+          <button type="button" data-delete="${esc(e.id)}" data-j="${j}" aria-label="${delLabel}"
+            class="flex h-11 w-11 items-center justify-center rounded-full text-stone-500 hover:bg-berry-light hover:text-berry">${iconTrash}</button>
+        </div>
+      </div>
+      <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <span class="rounded-full bg-gold/25 px-2.5 py-0.5 text-xs font-bold text-evergreen">${esc(headcount)}</span>
+        ${tagBadges(d.tags)}
+      </div>
+      ${d.note ? `<p class="mt-2 break-words text-sm italic text-stone-600">“${esc(d.note)}”</p>` : ''}
+      ${also}
+    </li>`;
+}
+
+function renderSection(cat) {
+  const list = dishItems().filter(x => x.d.category === cat.key);
+  const target = targetFor(cat.key);
+  const filled = list.length;
+  const isOther = cat.key === 'other';
+  const full = target > 0 && filled >= target;
+
+  const badgeText = isOther
+    ? (filled === 0 ? 'None yet' : plural(filled, 'entry', 'entries'))
+    : (full ? '✓ Filled' : `${filled} of ${target} filled`);
+  const badgeCls = full ? 'bg-gold text-evergreen' : 'bg-stone-100 text-stone-700';
+
+  const progress = !isOther && target > 0 ? `
+    <div class="mt-2.5 h-2 overflow-hidden rounded-full bg-stone-100" role="progressbar" aria-label="${esc(cat.title)} spots filled"
+      aria-valuemin="0" aria-valuemax="${target}" aria-valuenow="${Math.min(filled, target)}">
+      <div class="h-full rounded-full ${full ? 'bg-gold' : 'bg-evergreen'} transition-all" style="width:${Math.min(100, Math.round(filled / target * 100))}%"></div>
+    </div>
+    ${full ? '<p class="mt-1.5 text-[13px] font-semibold text-gold-dark">All spots filled — extras still welcome!</p>' : ''}` : '';
+
+  const empty = `<li class="px-4 py-5 text-center text-sm text-stone-500">${isOther
+    ? 'Nobody here yet — RSVP your headcount now and pick a dish later!'
+    : 'No dishes yet — be the first to sign up!'}</li>`;
+
+  return `
+    <section id="cat-${cat.key}" class="cat-section overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm" aria-labelledby="h-${cat.key}">
+      <div class="${isOther ? 'px-4 py-3' : 'p-4 pb-3'}">
+        <div class="flex items-start justify-between gap-3">
+          <h2 id="h-${cat.key}" class="flex min-w-0 items-start gap-2 ${isOther ? 'text-base' : 'text-lg'} font-extrabold leading-snug text-evergreen">
+            <span aria-hidden="true">${cat.icon}</span><span>${esc(cat.title)}</span>
+          </h2>
+          <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${badgeCls}">${esc(badgeText)}</span>
+        </div>
+        ${progress}
+      </div>
+      <ul class="divide-y divide-stone-100 border-t border-stone-100">
+        ${list.length ? list.map(renderDish).join('') : empty}
+      </ul>
+      <div class="border-t border-stone-100 p-3">
+        <button type="button" data-add="${cat.key}"
+          class="min-h-[44px] w-full rounded-xl border border-dashed border-evergreen/40 bg-cream px-3 text-sm font-bold text-evergreen hover:bg-stone-100">+ ${esc(cat.add)}</button>
+      </div>
+    </section>`;
+}
+
+function renderSections() {
+  if (!loaded) {
+    $('#sections').innerHTML = [0, 1, 2].map(() =>
+      '<div class="skeleton h-40 rounded-2xl border border-stone-200 bg-white" aria-hidden="true"></div>').join('') +
+      '<p class="sr-only" role="status">Loading RSVPs…</p>';
+    return;
+  }
+  $('#sections').innerHTML = CATEGORIES.map(renderSection).join('');
+}
+
+function render() {
+  renderSummary();
+  renderSections();
+  renderHost();
+  syncModalWithData();
+}
+
+function onData(list) {
+  loaded = true;
+  if (loadTimer) { clearTimeout(loadTimer); loadTimer = null; }
+  const sig = JSON.stringify(list);
+  if (sig === lastSignature) return; // identical snapshot, skip the repaint
+  lastSignature = sig;
+  entries = list;
+  render();
+}
+
+/* =====================================================================
+ *  Banners, toast, clipboard
+ * ===================================================================== */
+function showError(msg) {
+  $('#errorBannerText').textContent = msg;
+  $('#errorBanner').classList.remove('hidden');
+}
+let toastTimer = null;
+function toast(msg, isError = false) {
+  const t = $('#toast'), inner = $('#toastInner');
+  inner.textContent = msg;
+  inner.className = 'max-w-sm rounded-full px-5 py-3 text-center text-sm font-semibold text-white shadow-lg ' + (isError ? 'bg-berry' : 'bg-evergreen');
+  t.classList.remove('opacity-0', 'translate-y-2');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('opacity-0', 'translate-y-2'), isError ? 4500 : 3000);
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch (_) { /* fall through to legacy path */ }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (_) { /* ignore */ }
+  ta.remove();
+  return ok;
+}
+
+async function onCopyAddress(btn) {
+  const address = EVENT_CONFIG.location.replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+  const ok = await copyText(address);
+  if (ok) {
+    const original = btn.textContent;
+    btn.textContent = 'Copied ✓';
+    setTimeout(() => { btn.textContent = original; }, 2000);
+    toast('Address copied 📍');
+  } else {
+    toast('Couldn’t copy — press and hold the address to copy it.', true);
+  }
+}
+
+/* =====================================================================
+ *  Modal (add / edit)
+ * ===================================================================== */
+const modal = $('#modal');
+const form = $('#rsvpForm');
+const blankDish = category => ({ category, dish: '', tags: [], note: '', error: '' });
+const formState = { adults: 2, kids: 0, dishes: [blankDish('main')], editingId: null, linkedId: null };
+// linkedId = the guest picked from the name suggestions: the form then adds dish(es) to THEIR existing RSVP (headcount untouched)
+let lastFocus = null;
+let saving = false;
+
+// Dishes already on the page for a category, not counting the RSVP being edited
+const baseCount = key => dishItems().filter(x => x.d.category === key && x.e.id !== formState.editingId).length;
+// Spots still open for dish `idx` if it picks this category (other dishes in this form count too)
+const spotsLeft = (key, idx) => targetFor(key) - baseCount(key) - formState.dishes.filter((d, k) => k !== idx && d.category === key).length;
+
+function suggestedCategory() {
+  // Nudge guests toward whichever category has the most open spots (dishes already in this form count)
+  let best = null, bestLeft = 0;
+  ['appetizer', 'main', 'dessert'].forEach(k => {
+    const left = targetFor(k) - baseCount(k) - formState.dishes.filter(d => d.category === k).length;
+    if (left > bestLeft) { best = k; bestLeft = left; }
+  });
+  return best || 'main';
+}
+
+// Pull whatever is typed in the dish/note inputs into formState (covers autofill/paste without an input event)
+function syncFromDom() {
+  formState.dishes.forEach((d, i) => {
+    const dish = $('#dish-' + i, form), note = $('#note-' + i, form);
+    if (dish) d.dish = dish.value;
+    if (note) d.note = note.value;
+  });
+}
+
+function dishCardHtml(i) {
+  const d = formState.dishes[i];
+  const multi = formState.dishes.length > 1;
+  const isOther = d.category === 'other';
+  const optional = isOther && !multi && !formState.linkedId; // only a lone, brand-new "just RSVPing / undecided" entry needs no dish name
+
+  const segs = CATEGORIES.map(c => {
+    const sel = d.category === c.key;
+    let sub;
+    if (c.key === 'other') sub = 'Bringing drinks or extras, or deciding later';
+    else {
+      const left = spotsLeft(c.key, i);
+      sub = left > 0 ? plural(left, 'spot', 'spots') + ' left' : 'Extras welcome';
+    }
+    const cls = sel ? 'border-evergreen bg-evergreen text-white' : 'border-stone-300 bg-white text-stone-800 hover:bg-stone-50';
+    const wide = c.key === 'other';
+    return `<button type="button" role="radio" aria-checked="${sel}" data-cat="${c.key}" data-i="${i}"
+      class="${wide ? 'col-span-3 ' : ''}flex ${wide ? 'min-h-[56px]' : 'min-h-[76px]'} flex-col items-center justify-center rounded-xl border-2 px-1.5 py-2 text-center leading-tight ${cls}">
+      <span class="${wide ? 'text-[15px]' : 'text-sm'} font-bold">${wide ? '' : `<span class="block text-xl leading-none mb-1" aria-hidden="true">${c.icon}</span>`}${wide ? `<span aria-hidden="true">${c.icon}</span> ` : ''}${esc(c.seg)}</span>
+      <span class="mt-0.5 text-[11px] ${sel ? 'text-white/85' : 'text-stone-500'}">${esc(sub)}</span>
+    </button>`;
+  }).join('');
+
+  const tags = DIETARY_TAGS.map(t => {
+    const on = d.tags.includes(t.key);
+    const cls = on ? 'border-evergreen bg-evergreen text-white' : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50';
+    return `<button type="button" data-tag="${esc(t.key)}" data-i="${i}" aria-pressed="${on}"
+      class="min-h-[44px] rounded-full border-2 px-4 text-sm font-semibold ${cls}">${on ? '✓ ' : ''}${esc(t.key)}</button>`;
+  }).join('');
+
+  const header = multi ? `
+    <div class="flex items-center justify-between">
+      <p class="text-sm font-extrabold text-evergreen">Dish ${i + 1}</p>
+      <button type="button" data-remove-dish="${i}" aria-label="Remove dish ${i + 1}"
+        class="-mr-1 min-h-[44px] rounded-xl px-3 text-sm font-semibold text-berry hover:bg-berry-light">Remove</button>
+    </div>` : '';
+
+  const inputCls = 'min-h-[48px] w-full rounded-xl border bg-white px-3 text-base placeholder:text-stone-400 focus:border-evergreen focus:outline-none focus:ring-2 focus:ring-evergreen/30';
+  return `
+  <div data-dish-card="${i}" class="space-y-4 ${multi ? 'rounded-2xl border border-stone-200 bg-stone-50 p-3' : ''}">
+    ${header}
+    <div>
+      <p id="lbl-cat-${i}" class="mb-1.5 text-sm font-semibold text-stone-800">What are you bringing?</p>
+      <div role="radiogroup" aria-labelledby="lbl-cat-${i}" class="grid grid-cols-3 gap-2">${segs}</div>
+    </div>
+    <div>
+      <label for="dish-${i}" class="mb-1.5 block text-sm font-semibold text-stone-800">Dish Name ${optional
+        ? `<span id="dishOptional-${i}" class="font-normal text-stone-500">(optional)</span>`
+        : '<span class="text-berry" aria-hidden="true">*</span>'}</label>
+      <input id="dish-${i}" data-field="dish" data-i="${i}" type="text" maxlength="80" autocomplete="off"
+        value="${esc(d.dish)}" placeholder="${isOther ? 'e.g., Wine or sparkling cider' : 'e.g., Honey-glazed ham'}"
+        aria-describedby="err-dish-${i}" aria-invalid="${d.error ? 'true' : 'false'}"
+        class="${inputCls} ${d.error ? 'border-berry' : 'border-stone-300'}">
+      <p id="err-dish-${i}" class="mt-1 ${d.error ? '' : 'hidden '}text-sm font-medium text-berry">${esc(d.error)}</p>
+    </div>
+    <div>
+      <p id="lbl-tags-${i}" class="mb-1.5 text-sm font-semibold text-stone-800">Dietary tags <span class="font-normal text-stone-500">(tap all that apply)</span></p>
+      <div role="group" aria-labelledby="lbl-tags-${i}" class="flex flex-wrap gap-2">${tags}</div>
+    </div>
+    <div>
+      <label for="note-${i}" class="mb-1.5 block text-sm font-semibold text-stone-800">Notes <span class="font-normal text-stone-500">(optional)</span></label>
+      <input id="note-${i}" data-field="note" data-i="${i}" type="text" maxlength="140" autocomplete="off"
+        value="${esc(d.note)}" placeholder="e.g., Will bring warming tray" class="${inputCls} border-stone-300">
+    </div>
+  </div>`;
+}
+
+// `sync` is false whenever formState was just replaced or re-indexed (open, remove): the inputs still on the
+// page belong to the OLD state, and copying them in would overwrite the new values.
+function renderDishForms(focusSel, sync = true) {
+  if (sync) syncFromDom();
+  // Re-rendering replaces the buttons, so remember which one had focus and put it back
+  const a = document.activeElement;
+  let restore = focusSel || null;
+  if (!restore && a && form.contains(a) && a.dataset) {
+    if (a.dataset.cat) restore = `[data-cat="${a.dataset.cat}"][data-i="${a.dataset.i}"]`;
+    else if (a.dataset.tag) restore = `[data-tag="${a.dataset.tag}"][data-i="${a.dataset.i}"]`;
+  }
+  $('#dishForms').innerHTML = formState.dishes.map((_, i) => dishCardHtml(i)).join('');
+  const atMax = formState.dishes.length >= maxNewDishes();
+  $('#addDishBtn').disabled = atMax;
+  $('#dishHint').textContent = atMax
+    ? `That’s the limit: ${MAX_DISHES} dishes per RSVP${formState.linkedId ? ', including the ones already signed up' : ''}.`
+    : 'Bringing more than one dish? Add another. Your headcount is only counted once.';
+  if (restore) { const el = $(restore, form); if (el) el.focus({ preventScroll: true }); }
+}
+
+function addDish() {
+  syncFromDom();
+  if (formState.dishes.length >= maxNewDishes()) return;
+  formState.dishes.push(blankDish(suggestedCategory()));
+  const i = formState.dishes.length - 1;
+  renderDishForms('#dish-' + i);
+  const card = $(`[data-dish-card="${i}"]`, form);
+  if (card) card.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+}
+
+function removeDish(i) {
+  syncFromDom();
+  if (formState.dishes.length < 2) return;
+  formState.dishes.splice(i, 1);
+  renderDishForms('#addDishBtn', false);
+}
+
+function renderSteppers() {
+  ['adults', 'kids'].forEach(k => {
+    $('#' + k + 'Val').textContent = formState[k];
+    const min = k === 'adults' ? 1 : 0;
+    $(`[data-step="${k}"][data-dir="-1"]`).disabled = formState[k] <= min;
+    $(`[data-step="${k}"][data-dir="1"]`).disabled = formState[k] >= MAX_PER_COUNT;
+  });
+}
+
+function setNameError(msg) {
+  const p = $('#err-name'), input = $('#fName');
+  p.textContent = msg;
+  p.classList.toggle('hidden', !msg);
+  input.setAttribute('aria-invalid', msg ? 'true' : 'false');
+  input.classList.toggle('border-berry', !!msg);
+  input.classList.toggle('border-stone-300', !msg);
+}
+
+function paintDishError(i) {
+  const d = formState.dishes[i], p = $('#err-dish-' + i), input = $('#dish-' + i);
+  if (!d || !p || !input) return;
+  p.textContent = d.error;
+  p.classList.toggle('hidden', !d.error);
+  input.setAttribute('aria-invalid', d.error ? 'true' : 'false');
+  input.classList.toggle('border-berry', !!d.error);
+  input.classList.toggle('border-stone-300', !d.error);
+}
+
+/* ---------- name field: suggest guests who already RSVP'd ---------- */
+const nameState = { open: false, active: -1, items: [] };
+const normName = v => String(v).trim().toLowerCase().replace(/\s+/g, ' ');
+const dishSummary = e => {
+  const names = e.dishes.map(d => d.dish).filter(Boolean);
+  return names.length ? names.slice(0, 2).join(', ') + (names.length > 2 ? '…' : '') : 'No dish yet';
+};
+const linkedEntry = () => (formState.linkedId ? entries.find(e => e.id === formState.linkedId) || null : null);
+const maxNewDishes = () => MAX_DISHES - (linkedEntry() ? linkedEntry().dishes.length : 0);
+const saveLabel = () => (formState.linkedId ? 'Add dish' : (formState.editingId ? 'Save changes' : 'Save RSVP'));
+
+function closeNameList() {
+  const list = $('#nameList'), input = $('#fName');
+  nameState.open = false;
+  nameState.active = -1;
+  list.classList.add('hidden');
+  list.innerHTML = '';
+  input.setAttribute('aria-expanded', 'false');
+  input.removeAttribute('aria-activedescendant');
+  renderNameHint();
+}
+
+function renderNameList() {
+  const input = $('#fName'), list = $('#nameList');
+  const q = normName(input.value);
+  // No suggestions while editing an existing RSVP, once a guest is picked, or before anything is typed
+  const items = (formState.editingId || formState.linkedId || !q) ? [] : entries
+    .filter(e => normName(e.name).includes(q))
+    .sort((a, b) => (normName(b.name).startsWith(q) - normName(a.name).startsWith(q)) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+    .slice(0, 5);
+  nameState.items = items;
+  if (!items.length) { $('#nameStatus').textContent = ''; closeNameList(); return; }
+  if (nameState.active >= items.length) nameState.active = -1;
+  list.innerHTML =
+    `<li role="presentation" class="px-3 pb-1 pt-2 text-xs leading-snug text-stone-500">Already signed up? Tap your name to add another dish (your headcount stays the same). Otherwise keep typing to add a new guest.</li>` +
+    items.map((e, i) => `
+      <li id="name-opt-${i}" role="option" aria-selected="${i === nameState.active}" data-pick="${esc(e.id)}"
+        class="min-h-[52px] cursor-pointer border-t border-stone-100 px-3 py-2.5 ${i === nameState.active ? 'bg-evergreen/10' : 'hover:bg-stone-50'}">
+        <p class="break-words text-[15px] font-bold text-stone-900">${esc(e.name)}</p>
+        <p class="break-words text-xs text-stone-500">${esc(headcountText(e))} · ${esc(dishSummary(e))}</p>
+      </li>`).join('');
+  list.classList.remove('hidden');
+  input.setAttribute('aria-expanded', 'true');
+  nameState.open = true;
+  if (nameState.active >= 0) input.setAttribute('aria-activedescendant', 'name-opt-' + nameState.active);
+  else input.removeAttribute('aria-activedescendant');
+  $('#nameStatus').textContent = plural(items.length, 'suggestion', 'suggestions') + ' available';
+  renderNameHint();
+}
+
+function moveNameActive(delta) {
+  if (!nameState.open) { renderNameList(); if (!nameState.open) return; }
+  const n = nameState.items.length;
+  nameState.active = nameState.active < 0 ? (delta > 0 ? 0 : n - 1) : (nameState.active + delta + n) % n;
+  renderNameList();
+  const el = $('#name-opt-' + nameState.active);
+  if (el) el.scrollIntoView({ block: 'nearest' });
+}
+
+// A name typed in full that matches an existing RSVP (but wasn't picked) gets a gentle nudge instead of a silent duplicate.
+function renderNameHint() {
+  const hint = $('#nameHint');
+  const q = normName($('#fName').value);
+  const match = (formState.editingId || formState.linkedId || !q || nameState.open) ? null : entries.find(e => normName(e.name) === q);
+  hint.classList.toggle('hidden', !match);
+  hint.innerHTML = match ? `
+    <p class="text-sm text-stone-600">There’s already an RSVP for “${esc(match.name)}”. Saving as a new guest would count their headcount again.</p>
+    <button type="button" data-link="${esc(match.id)}"
+      class="-ml-1 min-h-[44px] rounded-lg px-1 text-left text-sm font-bold text-evergreen underline">Add a dish to ${esc(match.name)}’s RSVP instead</button>` : '';
+}
+
+function renderLinked() {
+  const e = linkedEntry(), linked = !!e;
+  $('#headcountSet').classList.toggle('hidden', linked);
+  const box = $('#linkedBox');
+  box.classList.toggle('hidden', !linked);
+  box.innerHTML = linked ? `
+    <p class="text-sm font-bold text-evergreen">Adding another dish to ${esc(e.name)}’s RSVP</p>
+    <p class="mt-0.5 text-sm text-stone-700">Already counted: ${esc(headcountText(e))}. Your headcount won’t change.</p>
+    <p class="mt-1 break-words text-xs text-stone-500">Already bringing: ${e.dishes.map(d => `${esc(d.dish || 'a dish to be decided')} <span class="text-stone-400">(${esc(catByKey(d.category).short)})</span>`).join(', ')}</p>
+    <button type="button" id="unlinkBtn" class="-ml-1 mt-1 min-h-[44px] rounded-lg px-1 text-sm font-semibold text-evergreen underline">Not you? Use a different name</button>` : '';
+  const input = $('#fName');
+  input.readOnly = linked;
+  input.classList.toggle('bg-stone-50', linked);
+  $('#modalTitle').textContent = linked ? 'Add another dish' : (formState.editingId ? 'Edit your RSVP' : 'RSVP & Add Dish');
+  if (!saving) $('#saveBtn').textContent = saveLabel();
+  renderNameHint();
+}
+
+function linkTo(id) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  closeNameList();
+  if (e.dishes.length >= MAX_DISHES) {
+    toast(`${e.name}’s RSVP already has ${MAX_DISHES} dishes. Tap the pencil on one of them to edit instead.`, true);
+    return;
+  }
+  syncFromDom();
+  formState.linkedId = id;
+  $('#fName').value = e.name;
+  setNameError('');
+  formState.dishes = formState.dishes.slice(0, Math.max(1, maxNewDishes()));
+  renderLinked();
+  renderDishForms('#dish-0', false); // formState was just trimmed, so don't copy stale inputs back in
+}
+
+function unlink() {
+  formState.linkedId = null;
+  $('#fName').value = ''; // they said it's not them: start the name over (also avoids an instant "already exists" nudge)
+  renderLinked();
+  renderDishForms();
+  $('#fName').focus();
+}
+
+// Live data can change under an open form (Firebase): keep the linked summary honest without touching typed fields
+function syncModalWithData() {
+  if (modal.classList.contains('hidden')) return;
+  if (formState.linkedId) {
+    if (!linkedEntry()) { toast('That RSVP was just removed by someone else. Please enter your name again.', true); unlink(); return; }
+    renderLinked();
+  }
+  if (nameState.open) renderNameList();
+}
+
+function openModal({ id = null, category = null, j = null } = {}) {
+  lastFocus = document.activeElement;
+  const existing = id ? entries.find(e => e.id === id) : null;
+  if (id && !existing) { toast('That entry was just removed by someone else.', true); return; }
+
+  formState.editingId = existing ? existing.id : null;
+  formState.adults = existing ? existing.adults : 2;
+  formState.kids = existing ? existing.kids : 0;
+  formState.dishes = existing
+    ? existing.dishes.map(d => ({ category: d.category, dish: d.dish, tags: [...d.tags], note: d.note, error: '' }))
+    : [];
+  if (!existing) formState.dishes = [blankDish(category || suggestedCategory())];
+
+  formState.linkedId = null;
+  $('#fName').value = existing ? existing.name : '';
+  $('#fName').readOnly = false;
+  setNameError('');
+  closeNameList();
+
+  $('#modalTitle').textContent = existing ? 'Edit your RSVP' : 'RSVP & Add Dish';
+  $('#saveBtn').textContent = existing ? 'Save changes' : 'Save RSVP';
+  $('#saveBtn').disabled = false;
+  saving = false;
+
+  $('#dishForms').innerHTML = '';
+  renderDishForms(null, false); renderSteppers(); renderLinked();
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  $('.sheet-body', modal).scrollTop = 0;
+  // Editing one dish of several: jump straight to that dish. Never steal focus from a field the user already tapped.
+  const jump = existing && Number.isInteger(j) && formState.dishes.length > 1 && formState.dishes[j] ? j : null;
+  setTimeout(() => {
+    if (modal.contains(document.activeElement) && document.activeElement !== modal) return;
+    const el = jump !== null ? $('#dish-' + jump) : $('#fName');
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    if (jump !== null) el.scrollIntoView({ block: 'center' });
+  }, 30);
+}
+
+function closeModal() {
+  closeNameList();
+  modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+}
+
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise(res => setTimeout(() => res('timeout'), ms))]);
+}
+
+async function onSubmit(ev) {
+  ev.preventDefault();
+  if (saving) return;
+  syncFromDom();
+  closeNameList();
+  const linked = linkedEntry();
+  if (formState.linkedId && !linked) { toast('That RSVP was just removed by someone else. Please enter your name again.', true); unlink(); return; }
+  if (linked && linked.dishes.length + formState.dishes.length > MAX_DISHES) { toast(`An RSVP can hold ${MAX_DISHES} dishes in total.`, true); return; }
+  const name = linked ? linked.name : $('#fName').value.trim();
+  const multi = formState.dishes.length > 1;
+  const needName = multi || !!linked; // every dish needs a name once there are several, or when adding to an existing RSVP
+
+  let firstBad = null;
+  setNameError('');
+  if (!name) { setNameError('Please enter your family or guest name.'); firstBad = $('#fName'); }
+  formState.dishes.forEach((d, i) => {
+    d.dish = d.dish.trim();
+    d.note = d.note.trim();
+    d.error = '';
+    if (!d.dish && (d.category !== 'other' || needName)) {
+      d.error = multi
+        ? `Please enter a name for dish ${i + 1}, or remove it.`
+        : (linked ? 'Please enter the dish you’re adding.' : 'Please enter your dish, or choose “Holiday Cheer / Drinks / Undecided” above.');
+      if (!firstBad) firstBad = $('#dish-' + i);
+    }
+    paintDishError(i);
+  });
+  if (firstBad) { firstBad.focus(); return; }
+
+  const existing = formState.editingId ? entries.find(e => e.id === formState.editingId) : null;
+  const now = Date.now();
+  const newDishes = formState.dishes.map(d => ({
+    category: d.category,
+    dish: d.dish,
+    tags: TAG_KEYS.filter(t => d.tags.includes(t)),
+    note: d.note
+  }));
+  const entry = linked
+    // Existing guest picked from the suggestions: same RSVP, same headcount, extra dish(es)
+    ? Object.assign({}, linked, { dishes: [...linked.dishes, ...newDishes], updatedAt: now })
+    : {
+        id: formState.editingId || undefined,
+        name,
+        adults: formState.adults,
+        kids: formState.kids,
+        dishes: newDishes,
+        createdAt: existing && existing.createdAt ? existing.createdAt : now,
+        updatedAt: now
+      };
+
+  saving = true;
+  const btn = $('#saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const result = await withTimeout(store.save(entry), 6000);
+    closeModal();
+    if (result === 'timeout') toast('Still syncing — your RSVP will go through once you’re back online.');
+    else toast(linked ? `Dish added to ${linked.name}’s RSVP 🎄` : (existing ? 'Changes saved 🎄' : 'RSVP saved! Thanks for signing up 🎄'));
+  } catch (err) {
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = saveLabel();
+    toast('Couldn’t save — please check your connection and try again.', true);
+  } finally {
+    saving = false;
+  }
+}
+
+/* ---------- delete confirmation ---------- */
+const confirmEl = $('#confirm');
+let pendingDelete = null; // { id, j } — j is null when the whole RSVP is removed
+let confirmFocus = null;
+
+function openConfirm(id, j) {
+  const e = entries.find(x => x.id === id);
+  if (!e) return;
+  // One dish of several: remove just that dish. A family's only dish removes the whole entry.
+  const one = e.dishes.length > 1 && Number.isInteger(j) && !!e.dishes[j];
+  pendingDelete = { id, j: one ? j : null };
+  confirmFocus = document.activeElement;
+  $('#confirmTitle').textContent = one ? `Remove ${e.dishes[j].dish || 'this dish'} from ${e.name}’s RSVP?` : `Remove ${e.name}’s entry?`;
+  $('#confirmNote').textContent = one ? `The rest of ${e.name}’s RSVP stays.` : 'This can’t be undone.';
+  $('#confirmOk').disabled = false;
+  confirmEl.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { if (!confirmEl.contains(document.activeElement)) $('#confirmCancel').focus({ preventScroll: true }); }, 30);
+}
+function closeConfirm() {
+  confirmEl.classList.add('hidden');
+  pendingDelete = null;
+  if (modal.classList.contains('hidden')) document.body.style.overflow = '';
+  if (confirmFocus && document.contains(confirmFocus)) confirmFocus.focus({ preventScroll: true });
+}
+async function doDelete() {
+  const target = pendingDelete;
+  if (!target) return;
+  $('#confirmOk').disabled = true;
+  try {
+    let result;
+    if (target.j === null) {
+      result = await withTimeout(store.remove(target.id), 6000);
+    } else {
+      const e = entries.find(x => x.id === target.id);
+      if (!e) { closeConfirm(); return; }
+      const next = Object.assign({}, e, { dishes: e.dishes.filter((_, k) => k !== target.j), updatedAt: Date.now() });
+      result = await withTimeout(store.save(next), 6000);
+    }
+    closeConfirm();
+    toast(result === 'timeout' ? 'Still syncing — the removal will go through once you’re back online.' : (target.j === null ? 'Entry removed' : 'Dish removed'));
+  } catch (err) {
+    console.error(err);
+    $('#confirmOk').disabled = false;
+    toast('Couldn’t remove — please try again.', true);
+  }
+}
+
+/* ---------- host view: full guest list + CSV (opened with ?host=1) ---------- */
+const sortedByName = () => [...entries].sort((a, b) =>
+  a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || a.createdAt - b.createdAt);
+
+function renderHost() {
+  if (!HOST_MODE) return;
+  const box = $('#guestList');
+  const list = sortedByName();
+  if (!list.length) {
+    box.innerHTML = '<p class="px-4 py-5 text-center text-sm text-stone-500">No RSVPs yet.</p>';
+    return;
+  }
+  const adults = list.reduce((s, e) => s + e.adults, 0);
+  const kids = list.reduce((s, e) => s + e.kids, 0);
+  const dishCount = list.reduce((s, e) => s + e.dishes.filter(d => d.dish).length, 0);
+  box.innerHTML = `
+    <p class="px-4 pt-3 text-xs font-semibold text-stone-500">${plural(list.length, 'RSVP', 'RSVPs')} · ${plural(adults + kids, 'person', 'people')} (${adults} adults, ${kids} kids) · ${plural(dishCount, 'dish', 'dishes')}</p>
+    <ol class="mt-1 divide-y divide-stone-100">
+      ${list.map(e => `
+        <li class="px-4 py-3">
+          <div class="flex items-start justify-between gap-3">
+            <p class="min-w-0 break-words font-bold text-stone-900">${esc(e.name)}</p>
+            <span class="shrink-0 rounded-full bg-gold/25 px-2.5 py-0.5 text-xs font-bold text-evergreen">${esc(headcountText(e))}</span>
+          </div>
+          ${e.dishes.map(d => {
+            const cat = catByKey(d.category);
+            return `
+          <div class="mt-1.5">
+            <p class="break-words text-sm text-stone-600"><span aria-hidden="true">${cat.icon}</span> ${esc(cat.seg)}${d.dish ? ' — ' + esc(d.dish) : ''}</p>
+            ${d.tags.length ? `<div class="mt-1 flex flex-wrap gap-1.5">${tagBadges(d.tags)}</div>` : ''}
+            ${d.note ? `<p class="mt-1 break-words text-sm italic text-stone-600">“${esc(d.note)}”</p>` : ''}
+          </div>`;
+          }).join('')}
+        </li>`).join('')}
+    </ol>`;
+}
+
+function toggleGuestList(btn) {
+  const box = $('#guestList');
+  const open = box.classList.toggle('hidden') === false;
+  btn.setAttribute('aria-expanded', String(open));
+  btn.textContent = open ? 'Hide guest list' : 'View all guests';
+}
+
+// Quote a CSV cell; neutralise leading =,+,-,@ so spreadsheets never run a guest's text as a formula.
+function csvCell(v) {
+  let s = String(v == null ? '' : v);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function fmtStamp(ms) {
+  if (!ms) return '';
+  const d = new Date(ms), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function downloadCsv() {
+  const list = sortedByName();
+  if (!list.length) { toast('No RSVPs to export yet.', true); return; }
+  const rows = [['Name', 'Adults', 'Kids', 'Total people', 'Category', 'Dish', 'Dietary tags', 'Notes', 'Signed up']];
+  // One row per dish. Headcount sits on the family's first row only, so summing the columns never double counts.
+  list.forEach(e => e.dishes.forEach((d, j) => rows.push([
+    e.name, j === 0 ? e.adults : '', j === 0 ? e.kids : '', j === 0 ? e.adults + e.kids : '',
+    catByKey(d.category).seg, d.dish, d.tags.join('; '), d.note, fmtStamp(e.createdAt)
+  ])));
+  const csv = '﻿' + rows.map(r => r.map(csvCell).join(',')).join('\r\n'); // BOM so Excel reads UTF-8 correctly
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `potluck-guests-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast('CSV downloaded 📥');
+}
+
+/* ---------- smooth scroll to category ---------- */
+function scrollToCategory(key) {
+  const el = $('#cat-' + key);
+  if (el) el.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'start' });
+}
+
+/* =====================================================================
+ *  Events
+ * ===================================================================== */
+document.addEventListener('click', ev => {
+  const opt = ev.target.closest('[data-pick]');
+  if (opt) { linkTo(opt.dataset.pick); return; }
+  if (nameState.open && !ev.target.closest('#nameWrap')) closeNameList();
+  const t = ev.target.closest('button, [data-close-modal]');
+  if (!t) {
+    if (ev.target.id === 'modalBackdrop') closeModal();
+    if (ev.target.id === 'confirmBackdrop') closeConfirm();
+    return;
+  }
+  if (t.id === 'copyAddr') return onCopyAddress(t);
+  if (t.id === 'openAdd') return openModal();
+  if (t.id === 'toggleGuests') return toggleGuestList(t);
+  if (t.id === 'downloadCsv') return downloadCsv();
+  if (t.id === 'demoBannerClose') { $('#demoBanner').classList.add('hidden'); safeSession.set(BANNER_KEY, '1'); return; }
+  if (t.id === 'errorBannerClose') { $('#errorBanner').classList.add('hidden'); return; }
+  if (t.id === 'confirmCancel') return closeConfirm();
+  if (t.id === 'confirmOk') return doDelete();
+  if (t.hasAttribute('data-close-modal')) return closeModal();
+  if (t.dataset.scroll) return scrollToCategory(t.dataset.scroll);
+  if (t.id === 'unlinkBtn') return unlink();
+  if (t.dataset.link) return linkTo(t.dataset.link);
+  if (t.dataset.add) return openModal({ category: t.dataset.add });
+  if (t.dataset.edit) return openModal({ id: t.dataset.edit, j: t.dataset.j !== undefined ? Number(t.dataset.j) : null });
+  if (t.dataset.delete) return openConfirm(t.dataset.delete, t.dataset.j !== undefined ? Number(t.dataset.j) : null);
+  if (t.id === 'addDishBtn') return addDish();
+  if (t.dataset.removeDish !== undefined) return removeDish(Number(t.dataset.removeDish));
+  if (t.dataset.cat) {
+    syncFromDom();
+    const d = formState.dishes[Number(t.dataset.i)];
+    d.category = t.dataset.cat;
+    if (d.category === 'other' && formState.dishes.length === 1) d.error = '';
+    return renderDishForms();
+  }
+  if (t.dataset.tag) {
+    syncFromDom();
+    const d = formState.dishes[Number(t.dataset.i)];
+    d.tags = d.tags.includes(t.dataset.tag) ? d.tags.filter(x => x !== t.dataset.tag) : [...d.tags, t.dataset.tag];
+    return renderDishForms();
+  }
+  if (t.dataset.step) {
+    const k = t.dataset.step;
+    const min = k === 'adults' ? 1 : 0;
+    formState[k] = clamp(formState[k] + Number(t.dataset.dir), min, MAX_PER_COUNT);
+    return renderSteppers();
+  }
+});
+
+form.addEventListener('submit', onSubmit);
+const nameInput = $('#fName');
+nameInput.addEventListener('input', () => {
+  if (nameInput.value.trim()) setNameError('');
+  nameState.active = -1;
+  renderNameList();
+  renderNameHint();
+});
+nameInput.addEventListener('focus', () => { if (nameInput.value.trim()) renderNameList(); });
+nameInput.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== nameInput) closeNameList(); }, 200));
+nameInput.addEventListener('keydown', ev => {
+  if (ev.key === 'ArrowDown') { ev.preventDefault(); moveNameActive(1); }
+  else if (ev.key === 'ArrowUp') { ev.preventDefault(); moveNameActive(-1); }
+  else if (ev.key === 'Enter' && nameState.open && nameState.active >= 0) { ev.preventDefault(); linkTo(nameState.items[nameState.active].id); }
+  else if (ev.key === 'Escape' && nameState.open) { ev.stopPropagation(); closeNameList(); } // first Escape closes the list, not the form
+});
+// Keep focus in the input while the list is pressed, so the list isn't torn down before the tap registers
+$('#nameList').addEventListener('mousedown', ev => ev.preventDefault());
+form.addEventListener('input', ev => {
+  const el = ev.target;
+  if (!el.dataset || !el.dataset.field) return;
+  const i = Number(el.dataset.i), d = formState.dishes[i];
+  if (!d) return;
+  d[el.dataset.field] = el.value;
+  if (el.dataset.field === 'dish' && el.value.trim() && d.error) { d.error = ''; paintDishError(i); }
+});
+
+document.addEventListener('keydown', ev => {
+  const confirmOpen = !confirmEl.classList.contains('hidden');
+  const modalOpen = !modal.classList.contains('hidden');
+  if (ev.key === 'Escape') {
+    if (confirmOpen) closeConfirm(); else if (modalOpen) closeModal();
+    return;
+  }
+  if (ev.key === 'Tab' && (confirmOpen || modalOpen)) {
+    // Keep keyboard focus inside whichever dialog is on top
+    const root = confirmOpen ? confirmEl : modal;
+    const focusables = [...root.querySelectorAll('button:not([disabled]), input:not([disabled])')].filter(el => el.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    else if (!root.contains(document.activeElement)) { ev.preventDefault(); first.focus(); }
+  }
+});
+
+/* =====================================================================
+ *  Boot
+ * ===================================================================== */
+async function boot() {
+  renderHeader();
+  if (HOST_MODE) $('#hostPanel').classList.remove('hidden');
+  renderSummary();
+  renderSections(); // skeletons until the first snapshot arrives
+
+  // Keep the category scroll offset equal to the sticky bar's real height
+  const bar = $('#summaryBar');
+  const syncBar = () => document.documentElement.style.setProperty('--sticky-h', bar.offsetHeight + 'px');
+  syncBar();
+  if ('ResizeObserver' in window) new ResizeObserver(syncBar).observe(bar);
+
+  let fellBack = false;
+  if (hasValidFirebaseConfig(EVENT_CONFIG.firebaseConfig)) {
+    try {
+      store = await createFirebaseStore(EVENT_CONFIG.firebaseConfig);
+    } catch (err) {
+      console.error('Firebase failed to load', err);
+      fellBack = true;
+      showError('Couldn’t reach Firebase, so this page is showing Demo Mode (this device only). Check your config and connection.');
+    }
+  }
+  if (!store) store = createLocalStore();
+
+  if (store.mode === 'local' && (fellBack || !safeSession.get(BANNER_KEY))) {
+    $('#demoBanner').classList.remove('hidden');
+  }
+
+  if (store.mode === 'firebase') {
+    loadTimer = setTimeout(() => {
+      if (!loaded) showError('Still trying to reach the live database… check your internet connection.');
+    }, 10000);
+  }
+
+  store.subscribe(onData, err => {
+    console.error('Realtime listener error', err);
+    showError('Live sync problem: ' + (err && err.message ? err.message : 'permission denied') + ' — check your Firebase database rules.');
+    if (!loaded) { loaded = true; render(); }
+  });
+  renderSummary(); // refresh the Live / Demo badge
+}
+
+boot();
+})();
+</script>
+</body>
+</html>
